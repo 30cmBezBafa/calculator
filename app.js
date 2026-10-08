@@ -144,7 +144,6 @@ function renderWorks() {
     
     document.getElementById('car-info-title').innerText = `${selectedData.brand} ${selectedData.model} (${selectedData.generation}), ДВС: ${selectedData.engine}`;
     
-    // БЛОК 1: Специфические работы по ДВС/КПП конкретной машины (3000р)
     if (engineData.works.engine_gearbox_rate && Object.keys(engineData.works.engine_gearbox_rate).length > 0) {
         createSectionHeader(container, "Тяжелый ремонт агрегатов (3 000 ₽/ч)");
         for (let name in engineData.works.engine_gearbox_rate) {
@@ -152,7 +151,6 @@ function renderWorks() {
         }
     }
 
-    // БЛОК 2: Регламентное ТО конкретной машины (2500р)
     if (engineData.works.standard_rate && Object.keys(engineData.works.standard_rate).length > 0) {
         createSectionHeader(container, "Регламентное ТО модели (2 500 ₽/ч)");
         for (let name in engineData.works.standard_rate) {
@@ -160,7 +158,6 @@ function renderWorks() {
         }
     }
 
-    // БЛОК 3: Глобальные слесарные работы (Подгружаются всегда для всех машин, 2500р)
     createSectionHeader(container, "Общие слесарные работы и диагностика (2 500 ₽/ч)");
     for (let name in GLOBAL_STANDARD_WORKS) {
         createWorkRow(container, name, GLOBAL_STANDARD_WORKS[name], 'standard');
@@ -185,7 +182,7 @@ function createWorkRow(container, name, hours, type) {
     row.className = 'work-item';
     row.innerHTML = `
         <label style="display: flex; align-items: center; cursor: pointer; flex: 1;">
-            <input type="checkbox" class="work-checkbox" data-name="${name}" data-hours="${hours}" data-type="${type}" onchange="handleCheckboxChange()" style="margin-right: 15px; transform: scale(1.2);">
+            <input type="checkbox" class="work-checkbox" data-name="${name}" data-hours="${hours}" data-type="${type}" onchange="window.handleCheckboxChange()" style="margin-right: 15px; transform: scale(1.2);">
             <span>${name}</span>
         </label>
         <div style="text-align: right; min-width: 140px;">
@@ -194,8 +191,11 @@ function createWorkRow(container, name, hours, type) {
     container.appendChild(row);
 }
 
-function handleCheckboxChange() {
+// Выносим функцию в глобальное окно (window), чтобы браузер её 100% видел из HTML разметки
+window.handleCheckboxChange = function() {
     checkRecommendations();
     calculateTotal();
 }
 
+function checkRecommendations() {
+    const checkboxes = document.querySelectorAll('.work-checkbox:checked');
