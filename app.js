@@ -123,7 +123,6 @@ function resetForm() {
     currentBrandDatabase = null;
 }
 
-
 function updateNextStep(currentField) {
     const db = currentBrandDatabase;
     if (currentField === 'model') initDropdown('generation-select', Object.keys(db.models[selectedData.model].generations));
