@@ -1,3 +1,11 @@
+// Импортируем базы данных марок напрямую как независимые модули
+import { audiDatabase } from './db_audi.js';
+import { volkswagenDatabase } from './db_vw.js';
+import { bmwDatabase } from './db_bmw.js';
+import { skodaDatabase } from './db_skoda.js';
+import { mercedesDatabase } from './db_mercedes.js';
+import { porscheDatabase } from './db_porsche.js';
+
 const RATE_ENGINE_GEARBOX = 3000;
 const RATE_STANDARD = 2500;
 
@@ -5,11 +13,14 @@ let currentBrandDatabase = null;
 let selectedData = { brand: '', model: '', generation: '', engine: '', gearbox: '', drive: '' };
 
 const brandMapping = {
-    "Audi": "audiDatabase", "Volkswagen": "volkswagenDatabase", "BMW": "bmwDatabase",
-    "Skoda": "skodaDatabase", "Mercedes-Benz": "mercedesDatabase", "Porsche": "porscheDatabase"
+    "Audi": audiDatabase,
+    "Volkswagen": volkswagenDatabase,
+    "BMW": bmwDatabase,
+    "Skoda": skodaDatabase,
+    "Mercedes-Benz": mercedesDatabase,
+    "Porsche": porscheDatabase
 };
 
-// ГЛОБАЛЬНЫЙ СПИСОК СЛЕСАРНЫХ РАБОТ И ДИАГНОСТИКИ (Одинаков для всех машин по ставке 2500р)
 const GLOBAL_STANDARD_WORKS = {
     "Диагностика ходовой части (подвески)": 0.5,
     "Компьютерная диагностика электронных систем": 0.6,
@@ -19,7 +30,6 @@ const GLOBAL_STANDARD_WORKS = {
     "Проверка плотности антифриза и осмотр течей": 0.3
 };
 
-// ЖЕСТКАЯ БАЗА УМНЫХ РЕКОМЕНДАЦИЙ (Срабатывает при выборе ключевых слов в чекбоксах)
 const SMART_RECOMMENDATIONS = {
     "цеп": "Не забудьте предложить клиенту замену переднего/заднего сальника коленвала, прокладки клапанной крышки и свежих уплотнительных колец навесного оборудования.",
     "ремен": "Рекомендуется параллельно заменить водяной насос (помпу), если он приводится в действие этим ремнем, а также оценить состояние натяжного ролика.",
@@ -68,7 +78,7 @@ function setupListeners() {
                 
                 if (e.target.value) {
                     if (field === 'brand') {
-                        currentBrandDatabase = window[brandMapping[e.target.value]];
+                        currentBrandDatabase = brandMapping[e.target.value];
                         if (currentBrandDatabase) initDropdown('model-select', Object.keys(currentBrandDatabase.models));
                     } else { updateNextStep(field); }
                 }
@@ -79,7 +89,6 @@ function setupListeners() {
     const resetBtn = document.getElementById('reset-btn');
     if (resetBtn) resetBtn.addEventListener('click', resetForm);
 
-    // Умный динамический перехватчик событий клика по галочкам
     const worksContainer = document.getElementById('works-container');
     if (worksContainer) {
         worksContainer.addEventListener('change', (e) => {
@@ -96,7 +105,7 @@ function setupListeners() {
             const query = e.target.value.toLowerCase().trim();
             if (query.length < 2) return;
             for (let brand in brandMapping) {
-                const db = window[brandMapping[brand]];
+                const db = brandMapping[brand];
                 if (!db) continue;
                 for (let model in db.models) {
                     if (model.toLowerCase().includes(query)) { triggerSearchSelect(brand, model); return; }
@@ -113,7 +122,7 @@ function setupListeners() {
 
 function triggerSearchSelect(brand, model, gen = '', eng = '') {
     document.getElementById('brand-select').value = brand;
-    currentBrandDatabase = window[brandMapping[brand]];
+    currentBrandDatabase = brandMapping[brand];
     selectedData.brand = brand;
     initDropdown('model-select', Object.keys(currentBrandDatabase.models));
     document.getElementById('model-select').value = model;
@@ -206,5 +215,3 @@ function createWorkRow(container, name, hours, type) {
     const badgeColor = type === 'engine_gearbox' ? 'background: #ffebee; color: #c62828;' : 'background: #e8f5e9; color: #2e7d32;';
     const row = document.createElement('div');
     row.className = 'work-item';
-    row.innerHTML = `
-        <label style="display: flex; align-items: center; cursor: pointer; flex: 1;">
