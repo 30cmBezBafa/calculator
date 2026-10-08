@@ -31,12 +31,12 @@
         <!-- Левая панель -->
         <div class="panel">
             <div class="search-box">
-                <label style="font-weight: bold; display: block; margin-bottom: 5px;"> Быстрый поиск (модель или мотор)</label>
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Быстрый поиск (модель или мотор)</label>
                 <input type="text" id="search-input" placeholder="Например: Tiguan или N57...">
             </div>
             
             <h3>Выбор автомобиля</h3>
-            <div class="form-group"><label>Марка</label><select id="brand-select"><option value="">Загрузка...</option></select></div>
+            <div class="form-group"><label>Марка</label><select id="brand-select"><option value="">-- Выбрать --</option></select></div>
             <div class="form-group"><label>Модель</label><select id="model-select" disabled><option value="">-- Выбрать --</option></select></div>
             <div class="form-group"><label>Поколение и годы</label><select id="generation-select" disabled><option value="">-- Выбрать --</option></select></div>
             <div class="form-group"><label>Модификация ДВС</label><select id="engine-select" disabled><option value="">-- Выбрать --</option></select></div>
@@ -68,13 +68,111 @@
         </div>
     </div>
 
-        <!-- Загружаем только 3 проверенных и очищенных файла баз данных -->
-    <script src="db_audi.js"></script>
-    <script src="db_vw.js"></script>
-    <script src="db_bmw.js"></script>
-    <script src="db_skoda.js"></script>
-    <script src="db_mercedes.js"></script>
-    <script src="db_porsche.js"></script>
-    <script src="main.js"></script>
-</body>
-</html>
+    <script>
+        // БАЗЫ ДАННЫХ ВШИТЫ НАПРЯМУЮ ДЛЯ НАДЕЖНОСТИ РАБОТЫ ПО ССЫЛКЕ
+        const carDatabases = {
+            "Audi": {
+                "models": {
+                    "A4": {
+                        "generations": {
+                            "B9 (2015-2020)": {
+                                "engines": {
+                                    "2.0 TFSI (CYRC)": {
+                                        "gearboxes": ["Робот S-tronic"], "drives": ["Полный (quattro)", "Передний"],
+                                        "works": {
+                                            "engine_gearbox_rate": { "Замена цепи ГРМ": 7.5, "Ремонт турбины": 4.0 },
+                                            "standard_rate": { "Замена масла в ДВС (ТО)": 0.7, "Замена передних колодок": 0.8 }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Volkswagen": {
+                "models": {
+                    "Tiguan": {
+                        "generations": {
+                            "II (2016-2021)": {
+                                "engines": {
+                                    "2.0 TSI (CHHB)": {
+                                        "gearboxes": ["Робот DSG-7"], "drives": ["Полный (4Motion)"],
+                                        "works": {
+                                            "engine_gearbox_rate": { "Замена цепи ГРМ": 7.0 },
+                                            "standard_rate": { "Замена масла в ДВС (ТО)": 0.6 }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Polo седан": {
+                        "generations": {
+                            "I (2010-2015)": {
+                                "engines": {
+                                    "1.6 MPI (CFNA)": {
+                                        "gearboxes": ["АКПП", "МКПП"], "drives": ["Передний"],
+                                        "works": {
+                                            "engine_gearbox_rate": { "Замена цепи ГРМ (с фиксаторами фаз)": 4.5 },
+                                            "standard_rate": { "Замена масла в ДВС и масляного фильтра (ТО)": 0.5 }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "BMW": {
+                "models": {
+                    "1 серии": {
+                        "generations": {
+                            "F20/F21 (2011-2019)": {
+                                "engines": {
+                                    "2.0d (N47)": {
+                                        "gearboxes": ["АКПП", "МКПП"], "drives": ["Задний", "Полный (xDrive)"],
+                                        "works": {
+                                            "engine_gearbox_rate": { "Замена комплекта цепей ГРМ (с демонтажем ДВС)": 12.0 },
+                                            "standard_rate": { "Замена масла в ДВС и масляного фильтра (ТО)": 0.8 }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        const RATE_ENGINE_GEARBOX = 3000;
+        const RATE_STANDARD = 2500;
+
+        let currentBrandDatabase = null;
+        let selectedData = { brand: '', model: '', generation: '', engine: '', gearbox: '', drive: '' };
+
+        const GLOBAL_STANDARD_WORKS = {
+            "Диагностика ходовой части (подвески)": 0.5,
+            "Компьютерная диагностика электронных систем": 0.6,
+            "Регулировка углов установки колес (Сход-Развал)": 1.2,
+            "Замена тормозной жидкости с проливкой контуров": 0.8,
+            "Замена жидкости ГУР": 0.7,
+            "Проверка плотности антифриза и осмотр течей": 0.3
+        };
+
+        const SMART_RECOMMENDATIONS = {
+            "цеп": "Не забудьте предложить клиенту замену переднего/заднего сальника коленвала, прокладки клапанной крышки и свежих уплотнительных колец навесного оборудования.",
+            "ремен": "Рекомендуется параллельно заменить водяной насос (помпу), если он приводится в действие этим ремнем, а также оценить состояние натяжного ролика.",
+            "масл": "Предложите проверить состояние воздушного и салонного фильтра. При замене масла в коробке (DSG/АКПП) напомните о необходимости замены выносного масляного фильтра.",
+            "колод": "Обязательно проверьте степень износа тормозных дисков, состояние пыльников направляющих и суппортов."
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initApp();
+            setupListeners();
+        });
+
+        function initApp() {
+            const select = document.getElementById('brand-select');
+            if (select) {
+                select.innerHTML = '<option value="">-- Выбрать --</option>';
