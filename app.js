@@ -9,6 +9,7 @@ const brandMapping = {
     "Skoda": "skodaDatabase", "Mercedes-Benz": "mercedesDatabase", "Porsche": "porscheDatabase"
 };
 
+// ГЛОБАЛЬНЫЙ СПИСОК СЛЕСАРНЫХ РАБОТ И ДИАГНОСТИКИ (Одинаков для всех машин по ставке 2500р)
 const GLOBAL_STANDARD_WORKS = {
     "Диагностика ходовой части (подвески)": 0.5,
     "Компьютерная диагностика электронных систем": 0.6,
@@ -18,6 +19,7 @@ const GLOBAL_STANDARD_WORKS = {
     "Проверка плотности антифриза и осмотр течей": 0.3
 };
 
+// ЖЕСТКАЯ БАЗА УМНЫХ РЕКОМЕНДАЦИЙ (Срабатывает при выборе ключевых слов в чекбоксах)
 const SMART_RECOMMENDATIONS = {
     "цеп": "Не забудьте предложить клиенту замену переднего/заднего сальника коленвала, прокладки клапанной крышки и свежих уплотнительных колец навесного оборудования.",
     "ремен": "Рекомендуется параллельно заменить водяной насос (помпу), если он приводится в действие этим ремнем, а также оценить состояние натяжного ролика.",
@@ -77,7 +79,7 @@ function setupListeners() {
     const resetBtn = document.getElementById('reset-btn');
     if (resetBtn) resetBtn.addEventListener('click', resetForm);
 
-    // Умный динамический перехватчик событий клика по галочкам (Решает проблему 0р навсегда)
+    // Умный динамический перехватчик событий клика по галочкам
     const worksContainer = document.getElementById('works-container');
     if (worksContainer) {
         worksContainer.addEventListener('change', (e) => {
