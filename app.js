@@ -5,8 +5,12 @@ let currentBrandDatabase = null;
 let selectedData = { brand: '', model: '', generation: '', engine: '', gearbox: '', drive: '' };
 
 const brandMapping = {
-    "Audi": "audiDatabase", "Volkswagen": "volkswagenDatabase", "BMW": "bmwDatabase",
-    "Skoda": "skodaDatabase", "Mercedes-Benz": "mercedesDatabase", "Porsche": "porscheDatabase"
+    "Audi": "audiDatabase", 
+    "Volkswagen": "volkswagenDatabase", 
+    "BMW": "bmwDatabase",
+    "Skoda": "skodaDatabase", 
+    "Mercedes-Benz": "mercedesDatabase", 
+    "Porsche": "porscheDatabase"
 };
 
 const GLOBAL_STANDARD_WORKS = {
@@ -211,8 +215,3 @@ function createWorkRow(container, name, hours, type) {
     const rateText = type === 'engine_gearbox' ? `${RATE_ENGINE_GEARBOX} ₽` : `${RATE_STANDARD} ₽`;
     const badgeColor = type === 'engine_gearbox' ? 'background: #ffebee; color: #c62828;' : 'background: #e8f5e9; color: #2e7d32;';
     const row = document.createElement('div');
-    row.className = 'work-item';
-        document.getElementById('res-total-cost').innerText = total.toLocaleString('ru-RU') + ' ₽';
-}
-
-}
