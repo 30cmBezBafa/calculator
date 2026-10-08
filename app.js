@@ -212,3 +212,7 @@ function createWorkRow(container, name, hours, type) {
     const badgeColor = type === 'engine_gearbox' ? 'background: #ffebee; color: #c62828;' : 'background: #e8f5e9; color: #2e7d32;';
     const row = document.createElement('div');
     row.className = 'work-item';
+        document.getElementById('res-total-cost').innerText = total.toLocaleString('ru-RU') + ' ₽';
+}
+
+}
