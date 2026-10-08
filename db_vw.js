@@ -1,4 +1,4 @@
-window.volkswagenDatabase = {
+export const.volkswagenDatabase = {
   "models": {
     "Polo седан": {
       "generations": {
