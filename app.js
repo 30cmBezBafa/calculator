@@ -9,7 +9,6 @@ const brandMapping = {
     "Skoda": "skodaDatabase", "Mercedes-Benz": "mercedesDatabase", "Porsche": "porscheDatabase"
 };
 
-// ГЛОБАЛЬНЫЙ СПИСОК СЛЕСАРНЫХ РАБОТ И ДИАГНОСТИКИ (Одинаков для всех машин по ставке 2500р)
 const GLOBAL_STANDARD_WORKS = {
     "Диагностика ходовой части (подвески)": 0.5,
     "Компьютерная диагностика электронных систем": 0.6,
@@ -19,7 +18,6 @@ const GLOBAL_STANDARD_WORKS = {
     "Проверка плотности антифриза и осмотр течей": 0.3
 };
 
-// ЖЕСТКАЯ БАЗА УМНЫХ РЕКОМЕНДАЦИЙ (Срабатывает при выборе ключевых слов в чекбоксах)
 const SMART_RECOMMENDATIONS = {
     "цеп": "Не забудьте предложить клиенту замену переднего/заднего сальника коленвала, прокладки клапанной крышки и свежих уплотнительных колец навесного оборудования.",
     "ремен": "Рекомендуется параллельно заменить водяной насос (помпу), если он приводится в действие этим ремнем, а также оценить состояние натяжного ролика.",
@@ -56,8 +54,6 @@ function setupListeners() {
         if (el) {
             el.addEventListener('change', (e) => {
                 selectedData[field] = e.target.value;
-                
-                // Исправленная строка поиска селекторов (дефис вынесен за скобки)
                 for (let i = index + 1; i < fields.length; i++) {
                     selectedData[fields[i]] = '';
                     const subSelect = document.getElementById(`${fields[i]}-select`);
@@ -78,11 +74,20 @@ function setupListeners() {
         }
     });
 
-    // Кнопка сброса
     const resetBtn = document.getElementById('reset-btn');
     if (resetBtn) resetBtn.addEventListener('click', resetForm);
 
-    // Логика Живого поиска
+    // Умный динамический перехватчик событий клика по галочкам (Решает проблему 0р навсегда)
+    const worksContainer = document.getElementById('works-container');
+    if (worksContainer) {
+        worksContainer.addEventListener('change', (e) => {
+            if (e.target && e.target.classList.contains('work-checkbox')) {
+                checkRecommendations();
+                calculateTotal();
+            }
+        });
+    }
+
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
@@ -201,6 +206,3 @@ function createWorkRow(container, name, hours, type) {
     row.className = 'work-item';
     row.innerHTML = `
         <label style="display: flex; align-items: center; cursor: pointer; flex: 1;">
-            <input type="checkbox" class="work-checkbox" data-name="${name}" data-hours="${hours}" data-type="${type}" onchange="handleCheckboxChange()" style="margin-right: 15px; transform: scale(1.2);">
-            <span>${name}</span>
-        </label>
