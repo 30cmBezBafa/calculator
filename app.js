@@ -1,11 +1,3 @@
-// Импортируем базы данных марок напрямую как независимые модули
-import { audiDatabase } from './db_audi.js';
-import { volkswagenDatabase } from './db_vw.js';
-import { bmwDatabase } from './db_bmw.js';
-import { skodaDatabase } from './db_skoda.js';
-import { mercedesDatabase } from './db_mercedes.js';
-import { porscheDatabase } from './db_porsche.js';
-
 const RATE_ENGINE_GEARBOX = 3000;
 const RATE_STANDARD = 2500;
 
@@ -13,12 +5,8 @@ let currentBrandDatabase = null;
 let selectedData = { brand: '', model: '', generation: '', engine: '', gearbox: '', drive: '' };
 
 const brandMapping = {
-    "Audi": audiDatabase,
-    "Volkswagen": volkswagenDatabase,
-    "BMW": bmwDatabase,
-    "Skoda": skodaDatabase,
-    "Mercedes-Benz": mercedesDatabase,
-    "Porsche": porscheDatabase
+    "Audi": "audiDatabase", "Volkswagen": "volkswagenDatabase", "BMW": "bmwDatabase",
+    "Skoda": "skodaDatabase", "Mercedes-Benz": "mercedesDatabase", "Porsche": "porscheDatabase"
 };
 
 const GLOBAL_STANDARD_WORKS = {
@@ -78,8 +66,13 @@ function setupListeners() {
                 
                 if (e.target.value) {
                     if (field === 'brand') {
-                        currentBrandDatabase = brandMapping[e.target.value];
-                        if (currentBrandDatabase) initDropdown('model-select', Object.keys(currentBrandDatabase.models));
+                        const globalVar = brandMapping[e.target.value];
+                        currentBrandDatabase = window[globalVar];
+                        if (currentBrandDatabase) {
+                            initDropdown('model-select', Object.keys(currentBrandDatabase.models));
+                        } else {
+                            alert('Ошибка: файл базы данных для марки ' + e.target.value + ' не найден!');
+                        }
                     } else { updateNextStep(field); }
                 }
             });
@@ -105,7 +98,8 @@ function setupListeners() {
             const query = e.target.value.toLowerCase().trim();
             if (query.length < 2) return;
             for (let brand in brandMapping) {
-                const db = brandMapping[brand];
+                const globalVar = brandMapping[brand];
+                const db = window[globalVar];
                 if (!db) continue;
                 for (let model in db.models) {
                     if (model.toLowerCase().includes(query)) { triggerSearchSelect(brand, model); return; }
@@ -121,12 +115,15 @@ function setupListeners() {
 }
 
 function triggerSearchSelect(brand, model, gen = '', eng = '') {
-    document.getElementById('brand-select').value = brand;
-    currentBrandDatabase = brandMapping[brand];
+    const globalVar = brandMapping[brand];
+    currentBrandDatabase = window[globalVar];
     selectedData.brand = brand;
+    document.getElementById('brand-select').value = brand;
+    
     initDropdown('model-select', Object.keys(currentBrandDatabase.models));
     document.getElementById('model-select').value = model;
     selectedData.model = model;
+    
     initDropdown('generation-select', Object.keys(currentBrandDatabase.models[model].generations));
     if (gen) {
         document.getElementById('generation-select').value = gen;
