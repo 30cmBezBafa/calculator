@@ -9,6 +9,24 @@ const brandMapping = {
     "Skoda": "skodaDatabase", "Mercedes-Benz": "mercedesDatabase", "Porsche": "porscheDatabase"
 };
 
+// ГЛОБАЛЬНЫЙ СПИСОК СЛЕСАРНЫХ РАБОТ И ДИАГНОСТИКИ (Одинаков для всех машин по ставке 2500р)
+const GLOBAL_STANDARD_WORKS = {
+    "Диагностика ходовой части (подвески)": 0.5,
+    "Компьютерная диагностика электронных систем": 0.6,
+    "Регулировка углов установки колес (Сход-Развал)": 1.2,
+    "Замена тормозной жидкости с проливкой контуров": 0.8,
+    "Замена жидкости ГУР": 0.7,
+    "Проверка плотности антифриза и осмотр течей": 0.3
+};
+
+// ЖЕСТКАЯ БАЗА УМНЫХ РЕКОМЕНДАЦИЙ (Срабатывает при выборе ключевых слов в чекбоксах)
+const SMART_RECOMMENDATIONS = {
+    "цеп": "Не забудьте предложить клиенту замену переднего/заднего сальника коленвала, прокладки клапанной крышки и свежих уплотнительных колец навесного оборудования.",
+    "ремен": "Рекомендуется параллельно заменить водяной насос (помпу), если он приводится в действие этим ремнем, а также оценить состояние натяжного ролика.",
+    "масл": "Предложите проверить состояние воздушного и салонного фильтра. При замене масла в коробке (DSG/АКПП) напомните о необходимости замены выносного масляного фильтра.",
+    "колод": "Обязательно проверьте степень износа тормозных дисков, состояние пыльников направляющих и суппортов."
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     initApp();
     setupListeners();
@@ -48,28 +66,20 @@ function setupListeners() {
         });
     });
 
-    // Кнопка сброса
     document.getElementById('reset-btn').addEventListener('click', resetForm);
 
-    // Логика Живого поиска
+    // Живой поиск
     document.getElementById('search-input').addEventListener('input', (e) => {
         const query = e.target.value.toLowerCase().trim();
         if (query.length < 2) return;
-
         for (let brand in brandMapping) {
             const db = window[brandMapping[brand]];
             if (!db) continue;
             for (let model in db.models) {
-                if (model.toLowerCase().includes(query)) {
-                    triggerSearchSelect(brand, model);
-                    return;
-                }
+                if (model.toLowerCase().includes(query)) { triggerSearchSelect(brand, model); return; }
                 for (let gen in db.models[model].generations) {
                     for (let eng in db.models[model].generations[gen].engines) {
-                        if (eng.toLowerCase().includes(query)) {
-                            triggerSearchSelect(brand, model, gen, eng);
-                            return;
-                        }
+                        if (eng.toLowerCase().includes(query)) { triggerSearchSelect(brand, model, gen, eng); return; }
                     }
                 }
             }
@@ -81,11 +91,9 @@ function triggerSearchSelect(brand, model, gen = '', eng = '') {
     document.getElementById('brand-select').value = brand;
     currentBrandDatabase = window[brandMapping[brand]];
     selectedData.brand = brand;
-    
     initDropdown('model-select', Object.keys(currentBrandDatabase.models));
     document.getElementById('model-select').value = model;
     selectedData.model = model;
-    
     initDropdown('generation-select', Object.keys(currentBrandDatabase.models[model].generations));
     if (gen) {
         document.getElementById('generation-select').value = gen;
@@ -106,16 +114,15 @@ function resetForm() {
     currentBrandDatabase = null;
     document.getElementById('search-input').value = '';
     document.getElementById('brand-select').value = '';
-    
     ['model', 'generation', 'engine', 'gearbox', 'drive'].forEach(f => {
         const select = document.getElementById(`${f}-select`);
         select.innerHTML = '<option value="">-- Выбрать --</option>';
         select.value = '';
         select.disabled = true;
     });
-    
     document.getElementById('works-section').style.display = 'none';
     document.getElementById('works-container').innerHTML = '';
+    document.getElementById('rec-box').style.display = 'none';
     document.getElementById('res-hours-engine').innerText = '0';
     document.getElementById('res-hours-standard').innerText = '0';
     document.getElementById('res-total-cost').innerText = '0 ₽';
@@ -137,42 +144,58 @@ function renderWorks() {
     
     document.getElementById('car-info-title').innerText = `${selectedData.brand} ${selectedData.model} (${selectedData.generation}), ДВС: ${selectedData.engine}`;
     
-    if (engineData.works.engine_gearbox_rate) {
-        for (let name in engineData.works.engine_gearbox_rate) createWorkRow(container, name, engineData.works.engine_gearbox_rate[name], 'engine_gearbox');
+    // БЛОК 1: Специфические работы по ДВС/КПП конкретной машины (3000р)
+    if (engineData.works.engine_gearbox_rate && Object.keys(engineData.works.engine_gearbox_rate).length > 0) {
+        createSectionHeader(container, "Тяжелый ремонт агрегатов (3 000 ₽/ч)");
+        for (let name in engineData.works.engine_gearbox_rate) {
+            createWorkRow(container, name, engineData.works.engine_gearbox_rate[name], 'engine_gearbox');
+        }
     }
-    if (engineData.works.standard_rate) {
-        for (let name in engineData.works.standard_rate) createWorkRow(container, name, engineData.works.standard_rate[name], 'standard');
+
+    // БЛОК 2: Регламентное ТО конкретной машины (2500р)
+    if (engineData.works.standard_rate && Object.keys(engineData.works.standard_rate).length > 0) {
+        createSectionHeader(container, "Регламентное ТО модели (2 500 ₽/ч)");
+        for (let name in engineData.works.standard_rate) {
+            createWorkRow(container, name, engineData.works.standard_rate[name], 'standard');
+        }
     }
+
+    // БЛОК 3: Глобальные слесарные работы (Подгружаются всегда для всех машин, 2500р)
+    createSectionHeader(container, "Общие слесарные работы и диагностика (2 500 ₽/ч)");
+    for (let name in GLOBAL_STANDARD_WORKS) {
+        createWorkRow(container, name, GLOBAL_STANDARD_WORKS[name], 'standard');
+    }
+
     document.getElementById('works-section').style.display = 'block';
+    checkRecommendations();
     calculateTotal();
 }
 
+function createSectionHeader(container, text) {
+    const div = document.createElement('div');
+    div.className = 'section-title';
+    div.innerText = text;
+    container.appendChild(div);
+}
+
 function createWorkRow(container, name, hours, type) {
-    const rateText = type === 'engine_gearbox' ? `${RATE_ENGINE_GEARBOX} ₽/ч` : `${RATE_STANDARD} ₽/ч`;
+    const rateText = type === 'engine_gearbox' ? `${RATE_ENGINE_GEARBOX} ₽` : `${RATE_STANDARD} ₽`;
     const badgeColor = type === 'engine_gearbox' ? 'background: #ffebee; color: #c62828;' : 'background: #e8f5e9; color: #2e7d32;';
     const row = document.createElement('div');
     row.className = 'work-item';
-    row.style = 'display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee;';
     row.innerHTML = `
         <label style="display: flex; align-items: center; cursor: pointer; flex: 1;">
-            <input type="checkbox" class="work-checkbox" data-hours="${hours}" data-type="${type}" onchange="calculateTotal()" style="margin-right: 15px; transform: scale(1.2);">
+            <input type="checkbox" class="work-checkbox" data-name="${name}" data-hours="${hours}" data-type="${type}" onchange="handleCheckboxChange()" style="margin-right: 15px; transform: scale(1.2);">
             <span>${name}</span>
         </label>
-        <div style="text-align: right;">
+        <div style="text-align: right; min-width: 140px;">
             <strong>${hours} н/ч</strong> <span style="font-size: 0.85em; padding: 3px 6px; border-radius: 4px; ${badgeColor}">${rateText}</span>
         </div>`;
     container.appendChild(row);
 }
 
-function calculateTotal() {
-    const checkboxes = document.querySelectorAll('.work-checkbox:checked');
-    let hEngine = 0, hStandard = 0, total = 0;
-    checkboxes.forEach(cb => {
-        const hours = parseFloat(cb.getAttribute('data-hours'));
-        if (cb.getAttribute('data-type') === 'engine_gearbox') { hEngine += hours; total += hours * RATE_ENGINE_GEARBOX; } 
-        else { hStandard += hours; total += hours * RATE_STANDARD; }
-    });
-    document.getElementById('res-hours-engine').innerText = hEngine.toFixed(1);
-    document.getElementById('res-hours-standard').innerText = hStandard.toFixed(1);
-    document.getElementById('res-total-cost').innerText = total.toLocaleString('ru-RU') + ' ₽';
+function handleCheckboxChange() {
+    checkRecommendations();
+    calculateTotal();
 }
+
