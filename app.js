@@ -34,57 +34,83 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initApp() {
     const select = document.getElementById('brand-select');
-    select.innerHTML = '<option value="">-- Выбрать --</option>';
-    Object.keys(brandMapping).forEach(b => select.innerHTML += `<option value="${b}">${b}</option>`);
+    if (select) {
+        select.innerHTML = '<option value="">-- Выбрать --</option>';
+        Object.keys(brandMapping).forEach(b => select.innerHTML += `<option value="${b}">${b}</option>`);
+    }
 }
 
 function initDropdown(id, items) {
     const select = document.getElementById(id);
-    select.innerHTML = '<option value="">-- Выбрать --</option>';
-    select.disabled = items.length === 0;
-    items.forEach(item => select.innerHTML += `<option value="${item}">${item}</option>`);
+    if (select) {
+        select.innerHTML = '<option value="">-- Выбрать --</option>';
+        select.disabled = items.length === 0;
+        items.forEach(item => select.innerHTML += `<option value="${item}">${item}</option>`);
+    }
 }
 
 function setupListeners() {
     const fields = ['brand', 'model', 'generation', 'engine', 'gearbox', 'drive'];
     fields.forEach((field, index) => {
-        document.getElementById(`${field}-select`).addEventListener('change', (e) => {
-            selectedData[field] = e.target.value;
-            for (let i = index + 1; i < fields.length; i++) {
-                selectedData[fields[i]] = '';
-                document.getElementById(`${fields[i]}-select`).innerHTML = '<option value="">-- Выбрать --</option>';
-                document.getElementById(`${fields[i]}-select`).disabled = true;
-            }
-            document.getElementById('works-section').style.display = 'none';
-            
-            if (e.target.value) {
-                if (field === 'brand') {
-                    currentBrandDatabase = window[brandMapping[e.target.value]];
-                    if (currentBrandDatabase) initDropdown('model-select', Object.keys(currentBrandDatabase.models));
-                } else { updateNextStep(field); }
-            }
-        });
+        const el = document.getElementById(`${field}-select`);
+        if (el) {
+            el.addEventListener('change', (e) => {
+                selectedData[field] = e.target.value;
+                for (let i = index + 1; i < fields.length; i++) {
+                    selectedData[fields[i]] = '';
+                    const subSelect = document.getElementById(`${fields[i]-select}`);
+                    if (subSelect) {
+                        subSelect.innerHTML = '<option value="">-- Выбрать --</option>';
+                        subSelect.disabled = true;
+                    }
+                }
+                document.getElementById('works-section').style.display = 'none';
+                
+                if (e.target.value) {
+                    if (field === 'brand') {
+                        currentBrandDatabase = window[brandMapping[e.target.value]];
+                        if (currentBrandDatabase) initDropdown('model-select', Object.keys(currentBrandDatabase.models));
+                    } else { updateNextStep(field); }
+                }
+            });
+        }
     });
 
-    document.getElementById('reset-btn').addEventListener('click', resetForm);
+    // Кнопка сброса
+    const resetBtn = document.getElementById('reset-btn');
+    if (resetBtn) resetBtn.addEventListener('click', resetForm);
+
+    // Умный перехват кликов по галочкам внутри контейнера работ (исправляет проблему 0 рублей)
+    const worksContainer = document.getElementById('works-container');
+    if (worksContainer) {
+        worksContainer.addEventListener('change', (e) => {
+            if (e.target.classList.contains('work-checkbox')) {
+                checkRecommendations();
+                calculateTotal();
+            }
+        });
+    }
 
     // Живой поиск
-    document.getElementById('search-input').addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase().trim();
-        if (query.length < 2) return;
-        for (let brand in brandMapping) {
-            const db = window[brandMapping[brand]];
-            if (!db) continue;
-            for (let model in db.models) {
-                if (model.toLowerCase().includes(query)) { triggerSearchSelect(brand, model); return; }
-                for (let gen in db.models[model].generations) {
-                    for (let eng in db.models[model].generations[gen].engines) {
-                        if (eng.toLowerCase().includes(query)) { triggerSearchSelect(brand, model, gen, eng); return; }
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if (query.length < 2) return;
+            for (let brand in brandMapping) {
+                const db = window[brandMapping[brand]];
+                if (!db) continue;
+                for (let model in db.models) {
+                    if (model.toLowerCase().includes(query)) { triggerSearchSelect(brand, model); return; }
+                    for (let gen in db.models[model].generations) {
+                        for (let eng in db.models[model].generations[gen].engines) {
+                            if (eng.toLowerCase().includes(query)) { triggerSearchSelect(brand, model, gen, eng); return; }
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    }
 }
 
 function triggerSearchSelect(brand, model, gen = '', eng = '') {
@@ -116,9 +142,11 @@ function resetForm() {
     document.getElementById('brand-select').value = '';
     ['model', 'generation', 'engine', 'gearbox', 'drive'].forEach(f => {
         const select = document.getElementById(`${f}-select`);
-        select.innerHTML = '<option value="">-- Выбрать --</option>';
-        select.value = '';
-        select.disabled = true;
+        if (select) {
+            select.innerHTML = '<option value="">-- Выбрать --</option>';
+            select.value = '';
+            select.disabled = true;
+        }
     });
     document.getElementById('works-section').style.display = 'none';
     document.getElementById('works-container').innerHTML = '';
@@ -181,21 +209,3 @@ function createWorkRow(container, name, hours, type) {
     const row = document.createElement('div');
     row.className = 'work-item';
     row.innerHTML = `
-        <label style="display: flex; align-items: center; cursor: pointer; flex: 1;">
-            <input type="checkbox" class="work-checkbox" data-name="${name}" data-hours="${hours}" data-type="${type}" onchange="window.handleCheckboxChange()" style="margin-right: 15px; transform: scale(1.2);">
-            <span>${name}</span>
-        </label>
-        <div style="text-align: right; min-width: 140px;">
-            <strong>${hours} н/ч</strong> <span style="font-size: 0.85em; padding: 3px 6px; border-radius: 4px; ${badgeColor}">${rateText}</span>
-        </div>`;
-    container.appendChild(row);
-}
-
-// Выносим функцию в глобальное окно (window), чтобы браузер её 100% видел из HTML разметки
-window.handleCheckboxChange = function() {
-    checkRecommendations();
-    calculateTotal();
-}
-
-function checkRecommendations() {
-    const checkboxes = document.querySelectorAll('.work-checkbox:checked');
