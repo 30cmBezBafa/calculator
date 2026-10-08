@@ -28,6 +28,7 @@
     <h2 style="text-align: center;">Оперативный расчет стоимости работ — Немеция Омск</h2>
 
     <div class="container">
+        <!-- Левая панель -->
         <div class="panel">
             <div class="search-box">
                 <label style="font-weight: bold; display: block; margin-bottom: 5px;"> Быстрый поиск (модель или мотор)</label>
@@ -45,6 +46,7 @@
             <button class="btn-reset" id="reset-btn">Сбросить расчет</button>
         </div>
 
+        <!-- Правая панель -->
         <div class="panel right-panel" id="works-section" style="display: none;">
             <h3 id="car-info-title" style="color: #333; margin-top: 0;">Автомобиль выбран</h3>
             
@@ -66,7 +68,15 @@
         </div>
     </div>
 
-    <!-- Подключаем только один файл логики как модуль (type="module") — это решает проблему кэша и видимости -->
-    <script type="module" src="app.js"></script>
+    <!-- Загружаем базы данных строго по очереди, чтобы они склеились в памяти до запуска логики -->
+    <script src="db_audi.js"></script>
+    <script src="db_vw.js"></script>
+    <script src="db_bmw.js"></script>
+    <script src="db_skoda.js"></script>
+    <script src="db_mercedes.js"></script>
+    <script src="db_porsche.js"></script>
+    
+    <!-- Запускаем управляющий код, вешая "убийцу кэша" v=999 -->
+    <script src="app.js?v=999"></script>
 </body>
 </html>
