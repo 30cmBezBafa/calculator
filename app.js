@@ -56,9 +56,11 @@ function setupListeners() {
         if (el) {
             el.addEventListener('change', (e) => {
                 selectedData[field] = e.target.value;
+                
+                // Исправленная строка поиска селекторов (дефис вынесен за скобки)
                 for (let i = index + 1; i < fields.length; i++) {
                     selectedData[fields[i]] = '';
-                    const subSelect = document.getElementById(`${fields[i]-select}`);
+                    const subSelect = document.getElementById(`${fields[i]}-select`);
                     if (subSelect) {
                         subSelect.innerHTML = '<option value="">-- Выбрать --</option>';
                         subSelect.disabled = true;
@@ -80,18 +82,7 @@ function setupListeners() {
     const resetBtn = document.getElementById('reset-btn');
     if (resetBtn) resetBtn.addEventListener('click', resetForm);
 
-    // Умный перехват кликов по галочкам внутри контейнера работ (исправляет проблему 0 рублей)
-    const worksContainer = document.getElementById('works-container');
-    if (worksContainer) {
-        worksContainer.addEventListener('change', (e) => {
-            if (e.target.classList.contains('work-checkbox')) {
-                checkRecommendations();
-                calculateTotal();
-            }
-        });
-    }
-
-    // Живой поиск
+    // Логика Живого поиска
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
@@ -209,3 +200,7 @@ function createWorkRow(container, name, hours, type) {
     const row = document.createElement('div');
     row.className = 'work-item';
     row.innerHTML = `
+        <label style="display: flex; align-items: center; cursor: pointer; flex: 1;">
+            <input type="checkbox" class="work-checkbox" data-name="${name}" data-hours="${hours}" data-type="${type}" onchange="handleCheckboxChange()" style="margin-right: 15px; transform: scale(1.2);">
+            <span>${name}</span>
+        </label>
