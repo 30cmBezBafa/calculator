@@ -50,15 +50,12 @@
         <div class="panel right-panel" id="works-section" style="display: none;">
             <h3 id="car-info-title" style="color: #333; margin-top: 0;">Автомобиль выбран</h3>
             
-            <!-- Блок умных сопутствующих рекомендаций -->
             <div class="recommendation-box" id="rec-box">
                 <strong style="color: #f57f17;">⚠️ Рекомендация для менеджера:</strong>
                 <div id="rec-list" style="font-size: 0.9em; margin-top: 5px; color: #555;"></div>
             </div>
 
-            <div id="works-container" style="max-height: 480px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; background: #fafafa; padding: 5px;">
-                <!-- Сюда JS подгрузит категории работ -->
-            </div>
+            <div id="works-container" style="max-height: 480px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; background: #fafafa; padding: 5px;"></div>
             
             <div class="result-box">
                 <div>Нормо-часы (Ремонт ДВС/КПП, 3000₽): <strong id="res-hours-engine">0</strong> н/ч</div>
@@ -71,13 +68,14 @@
         </div>
     </div>
 
-    <!-- Подключение баз -->
     <script src="db_audi.js" defer></script>
     <script src="db_vw.js" defer></script>
     <script src="db_bmw.js" defer></script>
     <script src="db_skoda.js" defer></script>
     <script src="db_mercedes.js" defer></script>
     <script src="db_porsche.js" defer></script>
-    <script src="app.js" defer></script>
+    
+    <!-- Добавляем уникальный маркер версии, чтобы полностью разбить кэш серверов GitHub -->
+    <script src="app.js?v=666" defer></script>
 </body>
 </html>
