@@ -1,6 +1,5 @@
-javascript
-   export const volkswagenDatabase = {
-     "models": {
+window.volkswagenDatabase = {
+  "models": {
     "Polo седан": {
       "generations": {
         "I (2010-2015)": {
