@@ -95,15 +95,34 @@ function triggerSearchSelect(brand, model, gen = '', eng = '') {
 }
 
 function resetForm() {
+    // 1. Полностью очищаем сохраненные данные выбора менеджера
     selectedData = { brand: '', model: '', generation: '', engine: '', gearbox: '', drive: '' };
+    
+    // 2. Очищаем текстовое поле живого поиска
     document.getElementById('search-input').value = '';
-    initApp();
+    
+    // 3. Сбрасываем главный селект марки в исходное положение
+    const brandSelect = document.getElementById('brand-select');
+    brandSelect.value = '';
+    
+    // 4. Глушим и очищаем все зависимые выпадающие списки ниже
     ['model', 'generation', 'engine', 'gearbox', 'drive'].forEach(f => {
-        document.getElementById(`${f}-select`).innerHTML = '<option value="">-- Выбрать --</option>';
-        document.getElementById(`${f}-select`).disabled = true;
+        const select = document.getElementById(`${f}-select`);
+        select.innerHTML = '<option value="">-- Выбрать --</option>';
+        select.value = '';
+        select.disabled = true;
     });
+    
+    // 5. Прячем правую панель с расчетом стоимости и обнуляем цифры
     document.getElementById('works-section').style.display = 'none';
+    document.getElementById('res-hours-engine').innerText = '0';
+    document.getElementById('res-hours-standard').innerText = '0';
+    document.getElementById('res-total-cost').innerText = '0 ₽';
+    
+    // 6. Сбрасываем переменную текущей базы данных марки в ноль
+    currentBrandDatabase = null;
 }
+
 
 function updateNextStep(currentField) {
     const db = currentBrandDatabase;
