@@ -68,15 +68,17 @@
         </div>
     </div>
 
-    <!-- Загружаем базы данных строго по очереди, чтобы они склеились в памяти до запуска логики -->
+        <!-- Загружаем только 3 проверенных и очищенных файла баз данных -->
     <script src="db_audi.js"></script>
     <script src="db_vw.js"></script>
     <script src="db_bmw.js"></script>
-    <script src="db_skoda.js"></script>
-    <script src="db_mercedes.js"></script>
-    <script src="db_porsche.js"></script>
     
-    <!-- Запускаем управляющий код, вешая "убийцу кэша" v=999 -->
-    <script src="app.js?v=999"></script>
+    <!-- Неисправные базы пока полностью отключаем (комментируем), чтобы их синтаксические ошибки не ломали сайт -->
+    <!-- <script src="db_skoda.js"></script> -->
+    <!-- <script src="db_mercedes.js"></script> -->
+    <!-- <script src="db_porsche.js"></script> -->
+    
+    <!-- Запускаем управляющий код с новым "убийцей кэша" v=1001 -->
+    <script src="app.js?v=1001"></script>
 </body>
 </html>
