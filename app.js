@@ -41,7 +41,7 @@ function setupListeners() {
         });
     });
 
-    // Кнопка сброса
+    // Кнопка сброса (принудительный жесткий сброс всего интерфейса)
     document.getElementById('reset-btn').addEventListener('click', resetForm);
 
     // Логика Живого поиска
@@ -95,17 +95,17 @@ function triggerSearchSelect(brand, model, gen = '', eng = '') {
 }
 
 function resetForm() {
-    // 1. Полностью очищаем сохраненные данные выбора менеджера
+    // 1. Сбрасываем внутренние данные
     selectedData = { brand: '', model: '', generation: '', engine: '', gearbox: '', drive: '' };
-    
-    // 2. Очищаем текстовое поле живого поиска
+    currentBrandDatabase = null;
+
+    // 2. Очищаем строку поиска
     document.getElementById('search-input').value = '';
     
-    // 3. Сбрасываем главный селект марки в исходное положение
-    const brandSelect = document.getElementById('brand-select');
-    brandSelect.value = '';
+    // 3. Сбрасываем выпадающий список марки
+    document.getElementById('brand-select').value = '';
     
-    // 4. Глушим и очищаем все зависимые выпадающие списки ниже
+    // 4. Очищаем и блокируем все остальные выпадающие списки
     ['model', 'generation', 'engine', 'gearbox', 'drive'].forEach(f => {
         const select = document.getElementById(`${f}-select`);
         select.innerHTML = '<option value="">-- Выбрать --</option>';
@@ -113,14 +113,12 @@ function resetForm() {
         select.disabled = true;
     });
     
-    // 5. Прячем правую панель с расчетом стоимости и обнуляем цифры
+    // 5. Полностью скрываем и обнуляем блок с ценами и работами
     document.getElementById('works-section').style.display = 'none';
+    document.getElementById('works-container').innerHTML = '';
     document.getElementById('res-hours-engine').innerText = '0';
     document.getElementById('res-hours-standard').innerText = '0';
     document.getElementById('res-total-cost').innerText = '0 ₽';
-    
-    // 6. Сбрасываем переменную текущей базы данных марки в ноль
-    currentBrandDatabase = null;
 }
 
 function updateNextStep(currentField) {
@@ -130,6 +128,13 @@ function updateNextStep(currentField) {
     else if (currentField === 'engine') initDropdown('gearbox-select', db.models[selectedData.model].generations[selectedData.generation].engines[selectedData.engine].gearboxes);
     else if (currentField === 'gearbox') initDropdown('drive-select', db.models[selectedData.model].generations[selectedData.generation].engines[selectedData.engine].drives);
     else if (currentField === 'drive') renderWorks();
+}
+
+function initDropdown(id, items) {
+    const select = document.getElementById(id);
+    select.innerHTML = '<option value="">-- Выбрать --</option>';
+    select.disabled = items.length === 0;
+    items.forEach(item => select.innerHTML += `<option value="${item}">${item}</option>`);
 }
 
 function renderWorks() {
@@ -154,6 +159,7 @@ function createWorkRow(container, name, hours, type) {
     const badgeColor = type === 'engine_gearbox' ? 'background: #ffebee; color: #c62828;' : 'background: #e8f5e9; color: #2e7d32;';
     const row = document.createElement('div');
     row.className = 'work-item';
+    row.style = 'display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee;';
     row.innerHTML = `
         <label style="display: flex; align-items: center; cursor: pointer; flex: 1;">
             <input type="checkbox" class="work-checkbox" data-hours="${hours}" data-type="${type}" onchange="calculateTotal()" style="margin-right: 15px; transform: scale(1.2);">
