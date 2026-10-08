@@ -20,6 +20,13 @@ function initApp() {
     Object.keys(brandMapping).forEach(b => select.innerHTML += `<option value="${b}">${b}</option>`);
 }
 
+function initDropdown(id, items) {
+    const select = document.getElementById(id);
+    select.innerHTML = '<option value="">-- Выбрать --</option>';
+    select.disabled = items.length === 0;
+    items.forEach(item => select.innerHTML += `<option value="${item}">${item}</option>`);
+}
+
 function setupListeners() {
     const fields = ['brand', 'model', 'generation', 'engine', 'gearbox', 'drive'];
     fields.forEach((field, index) => {
@@ -41,7 +48,7 @@ function setupListeners() {
         });
     });
 
-    // Кнопка сброса (принудительный жесткий сброс всего интерфейса)
+    // Кнопка сброса
     document.getElementById('reset-btn').addEventListener('click', resetForm);
 
     // Логика Живого поиска
@@ -95,17 +102,11 @@ function triggerSearchSelect(brand, model, gen = '', eng = '') {
 }
 
 function resetForm() {
-    // 1. Сбрасываем внутренние данные
     selectedData = { brand: '', model: '', generation: '', engine: '', gearbox: '', drive: '' };
     currentBrandDatabase = null;
-
-    // 2. Очищаем строку поиска
     document.getElementById('search-input').value = '';
-    
-    // 3. Сбрасываем выпадающий список марки
     document.getElementById('brand-select').value = '';
     
-    // 4. Очищаем и блокируем все остальные выпадающие списки
     ['model', 'generation', 'engine', 'gearbox', 'drive'].forEach(f => {
         const select = document.getElementById(`${f}-select`);
         select.innerHTML = '<option value="">-- Выбрать --</option>';
@@ -113,7 +114,6 @@ function resetForm() {
         select.disabled = true;
     });
     
-    // 5. Полностью скрываем и обнуляем блок с ценами и работами
     document.getElementById('works-section').style.display = 'none';
     document.getElementById('works-container').innerHTML = '';
     document.getElementById('res-hours-engine').innerText = '0';
@@ -128,13 +128,6 @@ function updateNextStep(currentField) {
     else if (currentField === 'engine') initDropdown('gearbox-select', db.models[selectedData.model].generations[selectedData.generation].engines[selectedData.engine].gearboxes);
     else if (currentField === 'gearbox') initDropdown('drive-select', db.models[selectedData.model].generations[selectedData.generation].engines[selectedData.engine].drives);
     else if (currentField === 'drive') renderWorks();
-}
-
-function initDropdown(id, items) {
-    const select = document.getElementById(id);
-    select.innerHTML = '<option value="">-- Выбрать --</option>';
-    select.disabled = items.length === 0;
-    items.forEach(item => select.innerHTML += `<option value="${item}">${item}</option>`);
 }
 
 function renderWorks() {
